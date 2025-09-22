@@ -68,7 +68,13 @@ def generate_interaction_data():
     session = generator.generate_session(user)
     interaction = generator.generate_interaction(user, product, session)
 
-    return interaction.dict()
+    # Convert to dict and handle datetime serialization
+    data = interaction.dict()
+    for key, value in data.items():
+        if isinstance(value, datetime):
+            data[key] = value.isoformat()
+
+    return data
 
 @app.get("/stream/interactions")
 async def stream_interactions(
@@ -130,7 +136,12 @@ async def stream_users(
         while (count is None or messages_sent < count) and time.time() < end_time:
             try:
                 user = generator.generate_user()
-                yield json.dumps(user.dict()) + "\n"
+                user_data = user.dict()
+                # Handle datetime serialization
+                for key, value in user_data.items():
+                    if isinstance(value, datetime):
+                        user_data[key] = value.isoformat()
+                yield json.dumps(user_data) + "\n"
                 messages_sent += 1
 
                 # Control rate
