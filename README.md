@@ -1,5 +1,7 @@
 # Clickstream Data Generator
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/your-username/clickstream-datagenerator)
+
 A FastAPI-based service for generating realistic e-commerce recommendation data including user profiles, products, interactions, and sessions with Kafka integration.
 
 ## Features
@@ -127,12 +129,40 @@ The application can generate:
 
 ## Railway Deployment
 
+### One-Click Deployment
+
+Click the button above to deploy instantly on Railway, or follow these manual steps:
+
+### Manual Deployment
+
 1. Push your code to GitHub
 2. Connect your repository to Railway
-3. Configure environment variables in Railway dashboard
+3. Configure environment variables in Railway dashboard:
+   - `KAFKA_BOOTSTRAP_SERVERS`: Your Kafka bootstrap servers
+   - `GENERATION_RATE`: Default generation rate (default: 100)
+   - `MAX_USERS`: Maximum cached users (default: 100000)
+   - `MAX_PRODUCTS`: Maximum cached products (default: 50000)
 4. Deploy with one click
 
 The included `railway.toml` and `Dockerfile` handle all deployment configuration.
+
+### Environment Variables on Railway
+
+```bash
+# Required for Kafka streaming
+KAFKA_BOOTSTRAP_SERVERS=your-kafka-cluster:9092
+
+# Optional configuration
+GENERATION_RATE=1000
+MAX_USERS=100000
+MAX_PRODUCTS=50000
+BATCH_SIZE=1000
+
+# Redis for session tracking (optional)
+REDIS_HOST=your-redis-host
+REDIS_PORT=6379
+REDIS_DB=0
+```
 
 ## Architecture
 
