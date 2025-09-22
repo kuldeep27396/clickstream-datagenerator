@@ -1,0 +1,45 @@
+[build]
+command = "uvicorn main:app --host 0.0.0.0 --port 8000"
+
+[build.env]
+PYTHON_VERSION = "3.11"
+
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port 8000"
+
+[env]
+PORT = "8000"
+HOST = "0.0.0.0"
+DEBUG = "true"
+
+[env.kafka]
+KAFKA_BOOTSTRAP_SERVERS = "your-kafka-bootstrap-servers:9092"
+KAFKA_TOPIC_USERS = "users"
+KAFKA_TOPIC_PRODUCTS = "products"
+KAFKA_TOPIC_INTERACTIONS = "interactions"
+KAFKA_TOPIC_SESSIONS = "sessions"
+
+[env.generation]
+GENERATION_RATE = "100"
+MAX_USERS = "100000"
+MAX_PRODUCTS = "50000"
+BATCH_SIZE = "1000"
+
+[env.redis]
+REDIS_HOST = "your-redis-host"
+REDIS_PORT = "6379"
+REDIS_DB = "0"
+
+[[services]]
+name = "api"
+service_type = "web"
+
+[services.ports]
+http = 8000
+
+[services.health_checks]
+[services.health_checks.http]
+path = "/health"
+timeout = 30
+interval = 60
+grace_period = 10
