@@ -12,13 +12,13 @@ from models import (
 )
 from data_generator import generator
 from config import settings
-# from kafka_producer import kafka_producer_manager
+from kafka_producer import kafka_producer_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # await kafka_producer_manager.start()
+    await kafka_producer_manager.start()
     yield
-    # await kafka_producer_manager.stop()
+    await kafka_producer_manager.stop()
 
 app = FastAPI(
     title=settings.app_name,
@@ -50,7 +50,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "kafka_connected": False  # await kafka_producer_manager.is_connected()
+        "kafka_connected": await kafka_producer_manager.is_connected()
     }
 
 @app.post("/generate/users", response_model=GenerationResponse, tags=["Generation"])

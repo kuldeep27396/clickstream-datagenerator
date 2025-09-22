@@ -25,21 +25,38 @@ class KafkaProducerManager:
 
     async def start(self):
         try:
-            self.producer = KafkaProducer(
-                bootstrap_servers=self.bootstrap_servers,
-                value_serializer=lambda v: json.dumps(v, default=str).encode('utf-8'),
-                key_serializer=lambda k: str(k).encode('utf-8') if k else None,
-                acks='all',
-                retries=3,
-                max_in_flight_requests_per_connection=5,
-                request_timeout_ms=30000,
-                retry_backoff_ms=100,
-                compression_type='gzip',
-                batch_size=16384,
-                linger_ms=5,
-                buffer_memory=33554432,
-                max_block_ms=60000
-            )
+            # Railway Kafka configuration
+            security_protocol = os.getenv('KAFKA_SECURITY_PROTOCOL', 'PLAINTEXT')
+            sasl_mechanism = os.getenv('KAFKA_SASL_MECHANISM', None)
+            sasl_username = os.getenv('KAFKA_SASL_USERNAME', None)
+            sasl_password = os.getenv('KAFKA_SASL_PASSWORD', None)
+
+            config = {
+                'bootstrap_servers': self.bootstrap_servers,
+                'value_serializer': lambda v: json.dumps(v, default=str).encode('utf-8'),
+                'key_serializer': lambda k: str(k).encode('utf-8') if k else None,
+                'acks': 'all',
+                'retries': 3,
+                'max_in_flight_requests_per_connection': 5,
+                'request_timeout_ms': 30000,
+                'retry_backoff_ms': 100,
+                'compression_type': 'gzip',
+                'batch_size': 16384,
+                'linger_ms': 5,
+                'buffer_memory': 33554432,
+                'max_block_ms': 60000
+            }
+
+            # Add security configuration for Railway
+            if security_protocol and security_protocol != 'PLAINTEXT':
+                config.update({
+                    'security_protocol': security_protocol,
+                    'sasl_mechanism': sasl_mechanism,
+                    'sasl_plain_username': sasl_username,
+                    'sasl_plain_password': sasl_password,
+                })
+
+            self.producer = KafkaProducer(**config)
 
             self.admin_client = KafkaAdminClient(
                 bootstrap_servers=self.bootstrap_servers,
