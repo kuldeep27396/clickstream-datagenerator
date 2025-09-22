@@ -1,6 +1,6 @@
 # Clickstream Data Generator
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/your-username/clickstream-datagenerator)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/kuldeep27396/clickstream-datagenerator)
 
 A FastAPI-based service for generating realistic e-commerce recommendation data including user profiles, products, interactions, and sessions with Kafka integration.
 
