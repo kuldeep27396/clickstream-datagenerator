@@ -196,43 +196,103 @@ curl 'https://clickstream-datagenerator-production.up.railway.app/metrics'
 
 The Clickstream Data Generator is built on a **high-performance streaming architecture** that delivers realistic e-commerce data at scale. The system uses **FastAPI** for the web framework, **Pydantic** for data validation, and **Faker** for realistic data generation.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    FastAPI Application                          │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   Data Cache    │  │  Stream Engine  │  │   API Endpoints │ │
-│  │                 │  │                 │  │                 │ │
-│  │ • Users (1000)  │  │ • Async Gen     │  │ • /stream/*     │ │
-│  │ • Products (2K) │  │ • Rate Control  │  │ • /metrics      │ │
-│  │ • Pre-cached    │  │ • SSE/HTTP      │  │ • /health       │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Data Generation Layer                        │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   User Model    │  │  Product Model  │  │Interaction Model│ │
-│  │                 │  │                 │  │                 │ │
-│  │ • 4 Segments    │  │ • 10 Categories │  │ • 5 Types       │ │
-│  │ • Realistic     │  │ • Price Ranges  │  │ • Weighted      │ │
-│  │ • Behavioral    │  │ • Brands        │  │ • Session-based │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "FastAPI Application Layer"
+        A[FastAPI App] --> B[Data Cache]
+        A --> C[Stream Engine]
+        A --> D[API Endpoints]
+
+        B --> B1["Users<br/>1,000 cached"]
+        B --> B2["Products<br/>2,000 cached"]
+        B --> B3["Pre-cached Data"]
+
+        C --> C1["Async Generator"]
+        C --> C2["Rate Controller"]
+        C --> C3["SSE/HTTP Stream"]
+
+        D --> D1["/stream/interactions"]
+        D --> D2["/stream/users"]
+        D --> D3["/metrics"]
+        D --> D4["/health"]
+    end
+
+    subgraph "Data Generation Layer"
+        E[Data Generator] --> F[User Model]
+        E --> G[Product Model]
+        E --> H[Interaction Model]
+
+        F --> F1["4 User Segments<br/>Realistic Behavior"]
+        G --> G1["10 Product Categories<br/>Dynamic Pricing"]
+        H --> H1["5 Interaction Types<br/>Session-based"]
+    end
+
+    A --> E
+    B -.-> E
+    C -.-> E
+
+    classDef appLayer fill:#4F46E5,stroke:#3730A3,color:#fff
+    classDef dataLayer fill:#059669,stroke:#047857,color:#fff
+    classDef cache fill:#DC2626,stroke:#B91C1C,color:#fff
+    classDef stream fill:#7C3AED,stroke:#6D28D9,color:#fff
+    classDef api fill:#0891B2,stroke:#0E7490,color:#fff
+
+    class A appLayer
+    class B cache
+    class C stream
+    class D api
+    class E dataLayer
+    class F,G,H dataLayer
 ```
 
 ### **Data Generation Flow**
 
-#### **1. User Generation Pipeline**
-```python
-# User creation with realistic segmentation
-def generate_user():
-    # Demographics: 18-80 age, location, device
-    # Segment assignment: 40% Casual, 35% Regular, 20% Power, 5% Premium
-    # Financial modeling: Spending based on segment (Casual: $0-500, Premium: $10K-50K)
-    # Preferences: 1-4 product categories based on behavior patterns
+```mermaid
+flowchart LR
+    subgraph "User Generation Pipeline"
+        A[Demographics<br/>Age 18-80<br/>Location<br/>Device] --> B[Segment Assignment<br/>Weighted Random]
+        B --> C[Financial Modeling<br/>Spending Patterns<br/>Order History]
+        C --> D[Preferences<br/>1-4 Categories<br/>Behavior Tags]
+
+        B --> E["Casual 40%<br/>$0-500<br/>0-10 orders"]
+        B --> F["Regular 35%<br/>$500-2000<br/>10-50 orders"]
+        B --> G["Power 20%<br/>$2000-10000<br/>50-200 orders"]
+        B --> H["Premium 5%<br/>$10000-50000<br/>200-1000 orders"]
+    end
+
+    subgraph "Product Generation Pipeline"
+        I[Category Assignment<br/>10 E-commerce Categories] --> J[Dynamic Pricing<br/>Category-specific Ranges]
+        J --> K[Brand Diversity<br/>100s Unique Brands]
+        K --> L[Quality Signals<br/>Ratings 3.0-5.0<br/>Reviews<br/>Popularity]
+
+        I --> I1["Electronics<br/>$50-2000"]
+        I --> I2["Clothing<br/>$10-200"]
+        I --> I3["Home & Garden<br/>$20-500"]
+        I --> I4["Beauty<br/>$15-100"]
+        I --> I5["Sports<br/>$30-300"]
+    end
+
+    subgraph "Session & Interaction Pipeline"
+        M[Session Context<br/>Device/Browser<br/>Location/Time] --> N[Weighted Interactions<br/>User Segment-based]
+        N --> O[Behavioral Patterns<br/>View Duration<br/>Purchase Qty]
+        O --> P[Revenue Tracking<br/>Real-time Calculation]
+
+        N --> N1["Casual: View 60%<br/>Click 25%<br/>Buy 2%"]
+        N --> N2["Regular: View 50%<br/>Click 20%<br/>Buy 8%"]
+        N --> N3["Power: View 40%<br/>Click 15%<br/>Buy 15%"]
+        N --> N4["Premium: View 35%<br/>Click 10%<br/>Buy 20%"]
+    end
+
+    classDef user fill:#3B82F6,stroke:#1D4ED8,color:#fff
+    classDef product fill:#10B981,stroke:#047857,color:#fff
+    classDef interaction fill:#F59E0B,stroke:#D97706,color:#fff
+    classDef segment fill:#EF4444,stroke:#DC2626,color:#fff
+
+    class A,B,C,D user
+    class E,F,G,H segment
+    class I,J,K,L product
+    class M,N,O,P interaction
+    class N1,N2,N3,N4 segment
 ```
 
 **User Segmentation Strategy:**
@@ -240,16 +300,6 @@ def generate_user():
 - **Regular Users (35%)**: $500-2000 spent, 10-50 orders, 8% purchase rate
 - **Power Users (20%)**: $2000-10000 spent, 50-200 orders, 15% purchase rate
 - **Premium Users (5%)**: $10000-50000 spent, 200-1000 orders, 20% purchase rate
-
-#### **2. Product Catalog Generation**
-```python
-# Product creation with category-specific attributes
-def generate_product():
-    # Category assignment: 10 e-commerce categories
-    # Price ranges: Category-specific (Electronics: $50-2000, Clothing: $10-200)
-    # Brand diversity: 100s of unique brands per category
-    # Quality signals: Ratings (3.0-5.0), review counts, popularity scores
-```
 
 **Product Categories & Pricing:**
 - **Electronics**: $50-2000 (laptops, phones, accessories)
@@ -263,65 +313,85 @@ def generate_product():
 - **Grocery**: $5-50 (organic, fresh, premium)
 - **Health**: $10-150 (supplements, medical, wellness)
 
-#### **3. Session & Interaction Generation**
-```python
-# Realistic user behavior modeling
-def generate_interaction(user, product, session):
-    # Weighted interaction types based on user segment
-    # Session context: Device, browser, location, timing
-    # Behavioral patterns: View durations, purchase quantities
-    # Revenue tracking: Real-time calculation for purchases
-```
-
-**Interaction Type Distribution by Segment:**
-```
-Casual Users:      {View: 60%, Click: 25%, Cart: 8%, Buy: 2%, Wishlist: 5%}
-Regular Users:     {View: 50%, Click: 20%, Cart: 15%, Buy: 8%, Wishlist: 7%}
-Power Users:       {View: 40%, Click: 15%, Cart: 20%, Buy: 15%, Wishlist: 10%}
-Premium Users:     {View: 35%, Click: 10%, Cart: 25%, Buy: 20%, Wishlist: 10%}
-```
-
 ### **High-Throughput Streaming Architecture**
 
-#### **Performance Optimizations**
+```mermaid
+graph TD
+    subgraph "Streaming Architecture"
+        A[Client Request] --> B[FastAPI Handler]
+        B --> C[Stream Generator]
+        C --> D[Data Cache]
+        C --> E[Rate Controller]
+        C --> F[Async Output]
+
+        D --> D1["User Cache<br/>1,000 Users"]
+        D --> D2["Product Cache<br/>2,000 Products"]
+        D --> D3["Fast Lookup<br/>O(1) Access"]
+
+        E --> E1["Rate Calculator<br/>delay = 1.0/rate"]
+        E --> E2["Precision Timer<br/>asyncio.sleep"]
+        E --> E3["Throughput Control<br/>10K+ msg/sec"]
+
+        F --> F1["JSON Serializer<br/>datetime → ISO"]
+        F --> F2["NDJSON Format<br/>newline-delimited"]
+        F --> F3["HTTP Stream<br/>SSE Compatible"]
+    end
+
+    subgraph "Performance Optimizations"
+        G[Pre-caching] --> G1["Memory: ~50MB"]
+        H[Async Generation] --> H1["Non-blocking"]
+        I[Rate Control] --> I1["Precise Timing"]
+        J[Efficient Serialization] --> J1["Minimal Overhead"]
+        K[Memory Management] --> K1["Optimized Structures"]
+    end
+
+    C --> D
+    C --> E
+    C --> F
+    C --> G
+    C --> H
+    C --> I
+    C --> J
+    C --> K
+
+    classDef request fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    classDef cache fill:#EF4444,stroke:#DC2626,color:#fff
+    classDef control fill:#F59E0B,stroke:#D97706,color:#fff
+    classDef output fill:#10B981,stroke:#047857,color:#fff
+    classDef perf fill:#3B82F6,stroke:#1D4ED8,color:#fff
+
+    class A request
+    class B,C cache
+    class D cache
+    class E control
+    class F output
+    class G,H,I,J,K perf
+```
+
+**Performance Optimizations:**
 1. **Data Pre-caching**: 1000 users + 2000 products cached in memory
 2. **Async Generation**: Non-blocking data generation with asyncio
 3. **Rate Control**: Precise sleep timing for target message rates
 4. **Efficient Serialization**: Direct JSON conversion without overhead
 5. **Memory Management**: Optimized data structures and minimal copying
 
-#### **Streaming Performance**
-``┌─────────────────────────────────────────────────────────────────┐
-│                 Performance Characteristics                      │
-├─────────────────────────────────────────────────────────────────┤
-│ • Throughput:       10,000+ messages/second                     │
-│ • Latency:          Sub-second response time                     │
-│ • Memory Usage:     ~50MB (cached data)                          │
-│ • CPU Usage:        Minimal (efficient generation)               │
-│ • Concurrency:      Async handling of multiple streams           │
-└─────────────────────────────────────────────────────────────────┘
+**Streaming Performance Characteristics:**
+```mermaid
+pie
+    title Performance Metrics
+    "Throughput" : 45
+    "Latency" : 20
+    "Memory Usage" : 15
+    "CPU Efficiency" : 12
+    "Concurrency" : 8
 ```
 
-#### **Stream Processing Pipeline**
-```python
-# High-throughput streaming implementation
-async def stream_interactions(rate=10000, duration=60):
-    delay = 1.0 / rate  # Precise timing control
-    async def generate_stream():
-        while time_remaining:
-            # Generate data from cache (fast lookup)
-            user = cached_users[time_based_index]
-            product = cached_products[time_based_index]
-
-            # Create interaction with realistic behavior
-            data = generate_interaction_data(user, product)
-
-            # Stream as JSON with newline delimiter
-            yield json.dumps(data) + "\n"
-
-            # Rate control
-            await asyncio.sleep(delay)
-```
+**Key Performance Indicators:**
+- **Throughput**: 10,000+ messages/second
+- **Latency**: Sub-second response time
+- **Memory Usage**: ~50MB (cached data)
+- **CPU Usage**: Minimal (efficient generation)
+- **Concurrency**: Async handling of multiple streams
 
 ### **Data Quality Assurance**
 
@@ -341,25 +411,122 @@ async def stream_interactions(rate=10000, duration=60):
 
 ### **Scalability & Deployment**
 
-#### **Railway Deployment Architecture**
-``┌─────────────────────────────────────────────────────────────────┐
-│                      Railway Platform                            │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   Auto Scaling  │  │   Load Balancer │  │   Health Checks │ │
-│  │                 │  │                 │  │                 │ │
-│  │ • CPU-based     │  │ • Round Robin   │  │ • /health       │ │
-│  │ • Memory        │  │ • SSL Terminate │  │ • /metrics      │ │
-│  │ • Concurrent    │  │ • Header Mgmt   │  │ • Auto-restart  │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "Railway Deployment Architecture"
+        A[Client Request] --> B[Load Balancer]
+        B --> C[Auto Scaling Group]
+        C --> D1[Instance 1]
+        C --> D2[Instance 2]
+        C --> D3[Instance N]
+
+        subgraph "Instance Components"
+            D1 --> E1[FastAPI App]
+            D2 --> E2[FastAPI App]
+            D3 --> E3[FastAPI App]
+
+            E1 --> F1[Data Cache]
+            E1 --> G1[Stream Engine]
+            E1 --> H1[Health Monitor]
+
+            E2 --> F2[Data Cache]
+            E2 --> G2[Stream Engine]
+            E2 --> H2[Health Monitor]
+
+            E3 --> F3[Data Cache]
+            E3 --> G3[Stream Engine]
+            E3 --> H3[Health Monitor]
+        end
+
+        B --> I[SSL Termination]
+        B --> J[Header Management]
+
+        C --> K[Scaling Controller]
+        K --> L["CPU-based<br/>Auto-scaling"]
+        K --> M["Memory-based<br/>Scaling"]
+        K --> N["Concurrent Connections<br/>Monitoring"]
+
+        H1 --> O[Health Checks]
+        H2 --> O
+        H3 --> O
+
+        O --> P["/health endpoint"]
+        O --> Q["/metrics endpoint"]
+        O --> R["Auto-restart<br/>on failure"]
+    end
+
+    subgraph "Railway Platform Services"
+        S[Environment Variables] --> T[Dynamic Configuration]
+        U[Performance Monitoring] --> V[Real-time Metrics]
+        W[Zero-Downtime Deployment] --> X[Rolling Updates]
+        Y[Canary Releases] --> Z[Gradual Traffic Shift]
+    end
+
+    K --> S
+    O --> U
+    C --> W
+    W --> Y
+
+    classDef client fill:#8B5CF6,stroke:#7C3AED,color:#fff
+    classDef loadbalancer fill:#EF4444,stroke:#DC2626,color:#fff
+    classDef instance fill:#10B981,stroke:#047857,color:#fff
+    classDef component fill:#F59E0B,stroke:#D97706,color:#fff
+    classDef scaling fill:#3B82F6,stroke:#1D4ED8,color:#fff
+    classDef railway fill:#6B7280,stroke:#4B5563,color:#fff
+
+    class A client
+    class B loadbalancer
+    class C scaling
+    class D1,D2,D3 instance
+    class E1,E2,E3,F1,F2,F3,G1,G2,G3,H1,H2,H3 component
+    class I,J,K,L,M,N scaling
+    class O,P,Q,R component
+    class S,T,U,V,W,X,Y,Z railway
 ```
 
-#### **Configuration Management**
+**Railway Deployment Features:**
+
+```mermaid
+flowchart LR
+    subgraph "Configuration Management"
+        A[Environment Variables] --> B[Railway-managed Config]
+        B --> C[Dynamic Settings]
+        C --> D[Runtime Updates]
+
+        E[Auto Scaling] --> F[CPU Thresholds]
+        E --> G[Memory Limits]
+        E --> H[Connection Count]
+        E --> I[Automatic Resource Allocation]
+
+        J[Health Monitoring] --> K[Real-time Metrics]
+        J --> L[Performance Alerts]
+        J --> M[Automatic Recovery]
+
+        N[Deployment Strategy] --> O[Zero-Downtime]
+        N --> P[Rolling Updates]
+        N --> Q[Canary Releases]
+        N --> R[Gradual Traffic Shift]
+    end
+
+    classDef config fill:#3B82F6,stroke:#1D4ED8,color:#fff
+    classDef scaling fill:#10B981,stroke:#047857,color:#fff
+    classDef health fill:#F59E0B,stroke:#D97706,color:#fff
+    classDef deploy fill:#EF4444,stroke:#DC2626,color:#fff
+
+    class A,B,C,D config
+    class E,F,G,H,I scaling
+    class J,K,L,M health
+    class N,O,P,Q,R deploy
+```
+
+**Key Features:**
 - **Environment Variables**: Railway-managed configuration
 - **Dynamic Scaling**: Automatic resource allocation based on load
 - **Performance Monitoring**: Real-time metrics and health checks
 - **Zero-Downtime**: Rolling deployments with canary releases
+- **Auto Recovery**: Automatic restart on failure
+- **SSL Termination**: Secure connection handling
+- **Load Balancing**: Round-robin distribution across instances
 
 ## 📄 **License**
 
